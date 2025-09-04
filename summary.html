@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Investment Calculator</title>
+
+  <!-- Roboto Mono Bold -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    :root{
+      --gold: #c8a24a;
+      --bg:   #000000;
+      --bg2:  #0d0d0d;
+    }
+
+    body{
+      background: var(--bg);
+      color: var(--gold);
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 700;
+      margin: 0;
+      padding: 28px;
+    }
+    h2{ margin: 0 0 16px 0; text-align: center; }
+
+    /* Controls */
+    .controls{ 
+      display: flex; 
+      justify-content: center;
+      gap: 14px; 
+      margin-bottom: 16px; 
+    }
+    input{
+      width: 140px;
+      padding: 6px 8px;
+      background: transparent;
+      color: var(--gold);
+      border: 2px solid var(--gold);
+      border-radius: 6px;
+      font: inherit;
+    }
+    .btn{
+      cursor: pointer;
+      padding: 8px 14px;
+      border: 2px solid var(--gold);
+      background: var(--gold);
+      color: #000;
+      border-radius: 6px;
+      font: inherit;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    /* Area to capture */
+    #captureArea{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+
+    /* Table */
+    table{
+      border-collapse: collapse;
+      width: 100%;
+      border: 2px solid var(--gold);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td{
+      border: 2px solid var(--gold);
+      padding: 8px 10px;
+      font-size: 14px;
+      text-align: right;
+      color: var(--gold);
+      background: var(--bg);
+    }
+    th{ text-align: center; background: #000; }
+    tbody tr:nth-child(even) td{ background: var(--bg2); }
+    td:first-child, th:first-child{ text-align: center; }
+    tfoot td{ background: #050505; }
+
+    /* Logo under the table */
+    .logo{
+      width: 320px; /* adjust size */
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h2>Investment Calculator</h2>
+
+  <div class="controls">
+    <label>
+      Initial Amount:
+      <input type="number" id="initialAmount" value="200" min="1" step="0.01" />
+    </label>
+    <button id="saveBtn" class="btn">Save as photo</button>
+  </div>
+
+  <!-- Capture only this area -->
+  <div id="captureArea">
+    <table id="investmentTable">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Account 1 ($)</th>
+          <th>Investor Wallet ($)</th>
+          <th>Total ($)</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">Total before commission:</td>
+          <td id="totalBefore"></td>
+        </tr>
+        <tr>
+          <td colspan="3">Total after 15% commission:</td>
+          <td id="totalAfter"></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Logo below -->
+    <img src="https://cdn.discordapp.com/attachments/1410324537366810636/1413225938644107414/image-removebg-preview_1.png?ex=68bb28b8&is=68b9d738&hm=27a716fe605d78f1e0821fb9ce8a6b7b30c39281aef5a9a90c866d37f0741e99&" alt="Logo" class="logo">
+  </div>
+
+  <script>
+    function calculate() {
+      const initial = parseFloat(document.getElementById("initialAmount").value) || 0;
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      let account = initial;
+      let lastTotal = 0;
+
+      for (let month = 0; month <= 12; month++) {
+        if (month > 0) account *= 1.15;
+        const wallet = account - initial;
+        const total = account + wallet;
+        lastTotal = total;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${month}</td>
+          <td>${account.toFixed(2)}</td>
+          <td>${wallet.toFixed(2)}</td>
+          <td>${total.toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      document.getElementById("totalBefore").textContent = "$ " + lastTotal.toFixed(2);
+      document.getElementById("totalAfter").textContent  = "$ " + (lastTotal * 0.85).toFixed(2);
+    }
+
+    async function saveAsPhoto() {
+      const node = document.getElementById("captureArea");
+      await document.fonts.ready;
+
+      html2canvas(node, {
+        backgroundColor: "#000000",
+        scale: 2,
+        useCORS: true
+      }).then(canvas => {
+        canvas.toBlob(blob => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "investment_summary.png";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }, "image/png");
+      });
+    }
+
+    document.getElementById("initialAmount").addEventListener("input", calculate);
+    document.getElementById("saveBtn").addEventListener("click", saveAsPhoto);
+    calculate();
+  </script>
+</body>
+</html>
